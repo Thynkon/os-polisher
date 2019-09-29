@@ -1,0 +1,10 @@
+ffmpeg
+gstreamer1-plugins-bad-freeworld
+gstreamer1-plugins-base
+gstreamer1-plugins-good-extras
+gstreamer1-plugins-ugly
+gstreamer-ffmpeg
+gstreamer-plugins-bad
+gstreamer-plugins-base
+gstreamer-plugins-good-extras
+gstreamer-plugins-ugly
