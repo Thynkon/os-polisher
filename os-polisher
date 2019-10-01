@@ -1,11 +1,13 @@
-#!/usr/bin/sh
+#!/usr/bin/env bash
 
 readonly HOSTNAME_FILE="/etc/hostname"
 readonly PACKAGES_FILE="packages"
 readonly CODECS_FILE="codecs"
+readonly FONTS_FILE="fonts"
 readonly DNF_CONFIG="/etc/dnf/dnf.conf"
+readonly GITHUB_USERNAME="Thynkon"
+readonly HOSTNAME="fedora"
 
-hostname="fedora"
 packages_list=""
 
 #TODO
@@ -29,7 +31,7 @@ configure_dnf() {
 }
 
 enable_rpmfusion() {
-	dnf install https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm
+	dnf install -y https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm
 				https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
 	
 	dnf update
@@ -43,10 +45,54 @@ install_packages() {
 	dnf install $packages_list
 }
 
-#change_hostname
-#configure_dnf
-#enable_rmpfusion
+setup_dotfiles() {
+	git clone --bare git@github.com:Thynkon/dotfiles.git $HOME/dev/dotfiles
+
+	if [[ $? -eq 1 ]]; then
+		echoerr "Failed to clone dotfiles repository!\n"
+		echoerr "Check your ssh keys!\n"
+
+		exit 1
+	fi
+
+    alias dt='git --git-dir=$HOME/dev/dotfiles/ --work-tree=$HOME'
+    dt checkout -f
+    dt config --local status.showUntrackedFiles no
+}
+
+setup_zsh() {
+	# Oh-my-zsh
+	sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"
+
+	# powerlevel
+	git clone https://github.com/romkatv/powerlevel10k.git $ZSH_CUSTOM/themes/powerlevel10k
+
+	### Plugins
+	# alias-tips
+	git clone https://github.com/djui/alias-tips.git $ZSH_CUSTOM/plugins/alias-tips
+
+	# zsh-completions
+	git clone https://github.com/zsh-users/zsh-completions ${ZSH_CUSTOM:=~/.oh-my-zsh/custom}/plugins/zsh-completions
+
+	# zsh-syntax-highlighting
+	git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
+}
+
+setup_vim() {
+	# Vundle
+	git clone https://github.com/VundleVim/Vundle.vim.git ~/.vim/bundle/Vundle.vim
+}
+
+change_hostname $HOSTNAME
+
+configure_dnf
+enable_rmpfusion
+
 install_packages $PACKAGES_FILE
 install_packages $CODECS_FILE
+install_packages $FONTS_FILE
+
+setup_dotfiles
+setup_vim
 
 exit 0
