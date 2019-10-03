@@ -4,7 +4,7 @@ readonly HOSTNAME_FILE="/etc/hostname"
 readonly HOSTNAME="fedora"
 
 readonly DNF_CONFIG="/etc/dnf/dnf.conf"
-readonly PACKAGES_FILE="packages"
+readonly SOFTWARE_FILE="software"
 readonly CODECS_FILE="codecs"
 readonly FONTS_FILE="fonts"
 
@@ -53,7 +53,7 @@ echo "fastestmirror=1" >> $DNF_CONFIG
 echo "deltarpm=1" >> $DNF_CONFIG
 
 # Install software, codecs and fonts
-install_packages $PACKAGES_FILE
+install_packages $SOFTWARE_FILE
 
 install_packages $CODECS_FILE
 
