@@ -1,12 +1,15 @@
 #!/usr/bin/env bash
 
 readonly HOSTNAME_FILE="/etc/hostname"
+readonly HOSTNAME="fedora"
+
+readonly DNF_CONFIG="/etc/dnf/dnf.conf"
 readonly PACKAGES_FILE="packages"
 readonly CODECS_FILE="codecs"
 readonly FONTS_FILE="fonts"
-readonly DNF_CONFIG="/etc/dnf/dnf.conf"
+
+readonly GITHUB="https://github.com"
 readonly GITHUB_USERNAME="Thynkon"
-readonly HOSTNAME="fedora"
 
 packages_list=""
 
@@ -46,7 +49,7 @@ install_packages() {
 }
 
 setup_dotfiles() {
-	git clone --bare git@github.com:Thynkon/dotfiles.git $HOME/dev/dotfiles
+	git clone --bare git@github.com:$GITHUB_USERNAME/dotfiles.git $HOME/dev/dotfiles
 
 	if [[ $? -eq 1 ]]; then
 		echoerr "Failed to clone dotfiles repository!\n"
@@ -65,22 +68,22 @@ setup_zsh() {
 	sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"
 
 	# powerlevel
-	git clone https://github.com/romkatv/powerlevel10k.git $ZSH_CUSTOM/themes/powerlevel10k
+	git clone $GITHUB/romkatv/powerlevel10k.git $ZSH_CUSTOM/themes/powerlevel10k
 
 	### Plugins
 	# alias-tips
-	git clone https://github.com/djui/alias-tips.git $ZSH_CUSTOM/plugins/alias-tips
+	git clone $GITHUB/djui/alias-tips.git $ZSH_CUSTOM/plugins/alias-tips
 
 	# zsh-completions
-	git clone https://github.com/zsh-users/zsh-completions ${ZSH_CUSTOM:=~/.oh-my-zsh/custom}/plugins/zsh-completions
+	git clone $GITHUB/zsh-users/zsh-completions ${ZSH_CUSTOM:=~/.oh-my-zsh/custom}/plugins/zsh-completions
 
 	# zsh-syntax-highlighting
-	git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
+	git clone $GITHUB/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
 }
 
 setup_vim() {
 	# Vundle
-	git clone https://github.com/VundleVim/Vundle.vim.git ~/.vim/bundle/Vundle.vim
+	git clone $GITHUB/VundleVim/Vundle.vim.git ~/.vim/bundle/Vundle.vim
 }
 
 change_hostname $HOSTNAME
