@@ -20,18 +20,6 @@ echoerr() {
 	echo "$@" 1>&2
 }
 
-configure_dnf() {
-	echo "fastestmirror=1" >> $DNF_CONFIG
-	echo "deltarpm=1" >> $DNF_CONFIG
-}
-
-enable_rpmfusion() {
-	dnf install -y https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm
-				https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
-	
-	dnf update
-}
-
 install_packages() {
 	while IFS= read -r line; do
 		packages_list+=$line"  "
@@ -51,6 +39,11 @@ echo $HOSTNAME >> $HOSTNAME_FILE
 # Improve dnf speed
 echo "fastestmirror=1" >> $DNF_CONFIG
 echo "deltarpm=1" >> $DNF_CONFIG
+
+dnf install -y https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm
+			https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
+
+dnf update
 
 # Install software, codecs and fonts
 install_packages $SOFTWARE_FILE
