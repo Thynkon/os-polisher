@@ -20,14 +20,6 @@ echoerr() {
 	echo "$@" 1>&2
 }
 
-change_hostname() {
-	if [[ -z $1 ]];then
-		echoerr "Hostname is null\n"
-	fi
-
-	echo $1 >> $HOSTNAME_FILE
-}
-
 configure_dnf() {
 	echo "fastestmirror=1" >> $DNF_CONFIG
 	echo "deltarpm=1" >> $DNF_CONFIG
@@ -48,54 +40,57 @@ install_packages() {
 	dnf install $packages_list
 }
 
-setup_dotfiles() {
-	git clone --bare git@github.com:$GITHUB_USERNAME/dotfiles.git $HOME/dev/dotfiles
 
-	if [[ $? -eq 1 ]]; then
-		echoerr "Failed to clone dotfiles repository!\n"
-		echoerr "Check your ssh keys!\n"
+# Change hostname
+if [[ -z $HOSTNAME ]];then
+	echoerr "Hostname is null\n"
+fi
 
-		exit 1
-	fi
+echo $HOSTNAME >> $HOSTNAME_FILE
 
-    alias dt='git --git-dir=$HOME/dev/dotfiles/ --work-tree=$HOME'
-    dt checkout -f
-    dt config --local status.showUntrackedFiles no
-}
+# Improve dnf speed
+echo "fastestmirror=1" >> $DNF_CONFIG
+echo "deltarpm=1" >> $DNF_CONFIG
 
-setup_zsh() {
-	# Oh-my-zsh
-	sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"
-
-	# powerlevel
-	git clone $GITHUB/romkatv/powerlevel10k.git $ZSH_CUSTOM/themes/powerlevel10k
-
-	### Plugins
-	# alias-tips
-	git clone $GITHUB/djui/alias-tips.git $ZSH_CUSTOM/plugins/alias-tips
-
-	# zsh-completions
-	git clone $GITHUB/zsh-users/zsh-completions ${ZSH_CUSTOM:=~/.oh-my-zsh/custom}/plugins/zsh-completions
-
-	# zsh-syntax-highlighting
-	git clone $GITHUB/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
-}
-
-setup_vim() {
-	# Vundle
-	git clone $GITHUB/VundleVim/Vundle.vim.git ~/.vim/bundle/Vundle.vim
-}
-
-change_hostname $HOSTNAME
-
-configure_dnf
-enable_rmpfusion
-
+# Install software, codecs and fonts
 install_packages $PACKAGES_FILE
-install_packages $CODECS_FILE
-install_packages $FONTS_FILE
 
-setup_dotfiles
-setup_vim
+install_packages $CODECS_FILE
+
+install_packages $FONTS_FILE
+wget $GITHUB/ryanoasis/nerd-fonts/blob/master/patched-fonts/FiraMono/Regular/complete/Fura%20Mono%20Regular%20Nerd%20Font%20Complete.otf -P /tmp
+
+# Setup dotfiles
+git clone --bare git@github.com:$GITHUB_USERNAME/dotfiles.git $HOME/dev/dotfiles
+
+if [[ $? -eq 1 ]]; then
+	echoerr "Failed to clone dotfiles repository!\n"
+	echoerr "Check your ssh keys!\n"
+
+	exit 1
+fi
+
+alias dt='git --git-dir=$HOME/dev/dotfiles/ --work-tree=$HOME'
+dt checkout -f
+dt config --local status.showUntrackedFiles no
+
+# Oh-my-zsh
+sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"
+
+# powerlevel
+git clone $GITHUB/romkatv/powerlevel10k.git $ZSH_CUSTOM/themes/powerlevel10k
+
+### Plugins
+# alias-tips
+git clone $GITHUB/djui/alias-tips.git $ZSH_CUSTOM/plugins/alias-tips
+
+# zsh-completions
+git clone $GITHUB/zsh-users/zsh-completions ${ZSH_CUSTOM:=~/.oh-my-zsh/custom}/plugins/zsh-completions
+
+# zsh-syntax-highlighting
+git clone $GITHUB/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
+
+# Vundle
+git clone $GITHUB/VundleVim/Vundle.vim.git ~/.vim/bundle/Vundle.vim
 
 exit 0
