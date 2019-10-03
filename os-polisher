@@ -11,8 +11,6 @@ readonly FONTS_FILE="fonts"
 readonly GITHUB="https://github.com"
 readonly GITHUB_USERNAME="Thynkon"
 
-packages_list=""
-
 #TODO
 # check if deltarpm and fastestmirror are already in dnf config file
 
@@ -21,6 +19,8 @@ echoerr() {
 }
 
 install_packages() {
+	packages_list=""
+
 	while IFS= read -r line; do
 		packages_list+=$line"  "
 	done < "$1"
