@@ -3,7 +3,13 @@
 readonly HOSTNAME_FILE="/etc/hostname"
 readonly HOSTNAME="fedora"
 
+readonly FEDORA_VERSION=$(rpm -E %fedora)
+
 readonly DNF_CONFIG="/etc/dnf/dnf.conf"
+readonly RPM_FUSION="https://download1.rpmfusion.org"
+readonly RPM_FUSION_FREE="$RPM_FUSION/free/fedora/rpmfusion-free-release-$FEDORA_VERSION.noarch.rpm"
+readonly RPM_FUSION_NONFREE="$RPM_FUSION/nonfree/fedora/rpmfusion-nonfree-release-$FEDORA_VERSION.noarch.rpm"
+
 readonly SOFTWARE_FILE="software"
 readonly CODECS_FILE="codecs"
 readonly FONTS_FILE="fonts"
@@ -28,61 +34,76 @@ install_packages() {
 	dnf install $packages_list
 }
 
+change_hostname() {
+	# Change hostname
+	if [[ -z $HOSTNAME ]];then
+		echoerr "Hostname is null\n"
+	fi
 
-# Change hostname
-if [[ -z $HOSTNAME ]];then
-	echoerr "Hostname is null\n"
-fi
+	echo $HOSTNAME >> $HOSTNAME_FILE
+	hostname $HOSTNAME
+}
 
-echo $HOSTNAME >> $HOSTNAME_FILE
+setup_dotfiles() {
+	# Setup dotfiles
+	git clone --bare git@github.com:$GITHUB_USERNAME/dotfiles.git $HOME/dev/dotfiles
 
-# Improve dnf speed
-echo "fastestmirror=1" >> $DNF_CONFIG
-echo "deltarpm=1" >> $DNF_CONFIG
+	if [[ $? -eq 1 ]]; then
+		echoerr "Failed to clone dotfiles repository!\n"
+		echoerr "Check your ssh keys!\n"
 
-dnf install -y https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
+		exit 1
+	fi
 
-dnf update
+	alias dt='git --git-dir=$HOME/dev/dotfiles/ --work-tree=$HOME'
+	dt checkout -f
+	dt config --local status.showUntrackedFiles no
+}
 
-# Install software, codecs and fonts
-install_packages $SOFTWARE_FILE
+setup_zsh() {
+	# Oh-my-zsh
+	sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"
 
-install_packages $CODECS_FILE
+	# powerlevel
+	git clone $GITHUB/romkatv/powerlevel10k.git $ZSH_CUSTOM/themes/powerlevel10k
 
-install_packages $FONTS_FILE
-wget $GITHUB/ryanoasis/nerd-fonts/blob/master/patched-fonts/FiraMono/Regular/complete/Fura%20Mono%20Regular%20Nerd%20Font%20Complete.otf -P /tmp
+	### Plugins
+	# alias-tips
+	git clone $GITHUB/djui/alias-tips.git $ZSH_CUSTOM/plugins/alias-tips
 
-# Setup dotfiles
-git clone --bare git@github.com:$GITHUB_USERNAME/dotfiles.git $HOME/dev/dotfiles
+	# zsh-completions
+	git clone $GITHUB/zsh-users/zsh-completions ${ZSH_CUSTOM:=~/.oh-my-zsh/custom}/plugins/zsh-completions
 
-if [[ $? -eq 1 ]]; then
-	echoerr "Failed to clone dotfiles repository!\n"
-	echoerr "Check your ssh keys!\n"
+	# zsh-syntax-highlighting
+	git clone $GITHUB/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
+}
 
-	exit 1
-fi
+main() {
+	change_hostname
 
-alias dt='git --git-dir=$HOME/dev/dotfiles/ --work-tree=$HOME'
-dt checkout -f
-dt config --local status.showUntrackedFiles no
+	# Improve dnf speed
+	echo "fastestmirror=1" >> $DNF_CONFIG
+	echo "deltarpm=1" >> $DNF_CONFIG
 
-# Oh-my-zsh
-sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"
+	# Enable rpmfusion repositories
+	dnf install -y $RPM_FUSION_FREE $RPM_FUSION_NONFREE
+	dnf update
 
-# powerlevel
-git clone $GITHUB/romkatv/powerlevel10k.git $ZSH_CUSTOM/themes/powerlevel10k
+	# Install software, codecs and fonts
+	install_packages $SOFTWARE_FILE
+	install_packages $CODECS_FILE
+	install_packages $FONTS_FILE
+	wget $GITHUB/ryanoasis/nerd-fonts/blob/master/patched-fonts/FiraMono/Regular/complete/Fura%20Mono%20Regular%20Nerd%20Font%20Complete.otf -P /tmp
 
-### Plugins
-# alias-tips
-git clone $GITHUB/djui/alias-tips.git $ZSH_CUSTOM/plugins/alias-tips
+	setup_dotfiles
 
-# zsh-completions
-git clone $GITHUB/zsh-users/zsh-completions ${ZSH_CUSTOM:=~/.oh-my-zsh/custom}/plugins/zsh-completions
+	# Install oh-my-zsh, powerlevel10k and some zsh plugins
+	setup_zsh
 
-# zsh-syntax-highlighting
-git clone $GITHUB/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
+	# Vundle, vim's plugin manager
+	git clone $GITHUB/VundleVim/Vundle.vim.git ~/.vim/bundle/Vundle.vim
+}
 
-# Vundle
-git clone $GITHUB/VundleVim/Vundle.vim.git ~/.vim/bundle/Vundle.vim
+main
 
 exit 0
