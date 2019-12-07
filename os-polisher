@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+readonly USER="thynkon"
+
 readonly HOSTNAME_FILE="/etc/hostname"
 readonly HOSTNAME="fedora"
 
@@ -59,6 +61,7 @@ setup_dotfiles() {
 	dt checkout -f
 	dt config --local status.showUntrackedFiles no
 }
+export -f setup_dotfiles
 
 setup_zsh() {
 	# Oh-my-zsh
@@ -77,6 +80,7 @@ setup_zsh() {
 	# zsh-syntax-highlighting
 	git clone $GITHUB/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
 }
+export -f setup_zsh
 
 main() {
 	change_hostname
@@ -95,13 +99,14 @@ main() {
 	install_packages $FONTS_FILE
 	wget $GITHUB/ryanoasis/nerd-fonts/blob/master/patched-fonts/FiraMono/Regular/complete/Fura%20Mono%20Regular%20Nerd%20Font%20Complete.otf -P /tmp
 
-	setup_dotfiles
+	su $USER -c "setup_dotfiles"
 
 	# Install oh-my-zsh, powerlevel10k and some zsh plugins
+	su $USER -c "setup_zsh"
 	setup_zsh
 
 	# Vundle, vim's plugin manager
-	git clone $GITHUB/VundleVim/Vundle.vim.git ~/.vim/bundle/Vundle.vim
+	su $USER -c "git clone $GITHUB/VundleVim/Vundle.vim.git ~/.vim/bundle/Vundle.vim"
 }
 
 main
