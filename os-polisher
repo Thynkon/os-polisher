@@ -16,8 +16,8 @@ readonly SOFTWARE_FILE="software"
 readonly CODECS_FILE="codecs"
 readonly FONTS_FILE="fonts"
 
-readonly GITHUB="https://github.com"
-readonly GITHUB_USERNAME="Thynkon"
+export readonly GITHUB="https://github.com"
+export readonly GITHUB_USERNAME="Thynkon"
 
 #TODO
 # check if deltarpm and fastestmirror are already in dnf config file
@@ -48,7 +48,7 @@ change_hostname() {
 
 setup_dotfiles() {
 	# Setup dotfiles
-	git clone --bare git@github.com:$GITHUB_USERNAME/dotfiles.git $HOME/dev/dotfiles
+	git clone --bare "$git@github.com:$GITHUB_USERNAME/dotfiles.git" "$HOME/dev/dotfiles"
 
 	if [[ $? -eq 1 ]]; then
 		echoerr "Failed to clone dotfiles repository!\n"
@@ -57,15 +57,16 @@ setup_dotfiles() {
 		exit 1
 	fi
 
-	alias dt='git --git-dir=$HOME/dev/dotfiles/ --work-tree=$HOME'
-	dt checkout -f
-	dt config --local status.showUntrackedFiles no
+	git --git-dir=$HOME/dev/dotfiles/ --work-tree=$HOME checkout -f
+	git --git-dir=$HOME/dev/dotfiles/ --work-tree=$HOME config --local status.showUntrackedFiles no
 }
 export -f setup_dotfiles
 
 setup_zsh() {
+	local ZSH_CUSTOM="$HOME/.oh-my-zsh/custom"
+
 	# Oh-my-zsh
-	sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"
+	sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
 
 	# powerlevel
 	git clone $GITHUB/romkatv/powerlevel10k.git $ZSH_CUSTOM/themes/powerlevel10k
@@ -97,13 +98,14 @@ main() {
 	install_packages $SOFTWARE_FILE
 	install_packages $CODECS_FILE
 	install_packages $FONTS_FILE
-	wget $GITHUB/ryanoasis/nerd-fonts/blob/master/patched-fonts/FiraMono/Regular/complete/Fura%20Mono%20Regular%20Nerd%20Font%20Complete.otf -P /tmp
-
-	su $USER -c "setup_dotfiles"
+	wget "$GITHUB/ryanoasis/nerd-fonts/blob/master/patched-fonts/FiraMono/Regular/complete/Fura%20Mono%20Regular%20Nerd%20Font%20Complete.otf" -P /home/$USER/Downloads
 
 	# Install oh-my-zsh, powerlevel10k and some zsh plugins
-	su $USER -c "setup_zsh"
+	su $USER -c "bash -c setup_zsh"
 	setup_zsh
+
+	su $USER -c "bash -c setup_dotfiles"
+	ln -s /home/$USER/.p10k.zsh /root/
 
 	# Vundle, vim's plugin manager
 	su $USER -c "git clone $GITHUB/VundleVim/Vundle.vim.git ~/.vim/bundle/Vundle.vim"
