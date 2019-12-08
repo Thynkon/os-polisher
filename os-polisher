@@ -19,9 +19,6 @@ readonly FONTS_FILE="fonts"
 export readonly GITHUB="https://github.com"
 export readonly GITHUB_USERNAME="Thynkon"
 
-#TODO
-# check if deltarpm and fastestmirror are already in dnf config file
-
 echoerr() {
 	echo "$@" 1>&2
 }
@@ -42,13 +39,26 @@ change_hostname() {
 		echoerr "Hostname is null\n"
 	fi
 
-	echo $HOSTNAME >> $HOSTNAME_FILE
+	echo $HOSTNAME > $HOSTNAME_FILE
 	hostname $HOSTNAME
+}
+
+setup_dnf() {
+	local declare -A dnf_options
+	dnf_options[fastestmirror]=1
+	dnf_options[deltarpm]=1
+
+	for option in "${!dnf_options[@]}"; do
+		# Only enable these settings if they aren't already set
+		if ! grep -q "$option=${dnf_options[$option]}" $DNF_CONFIG; then
+			echo "$option=${dnf_options[$option]}" >> $DNF_CONFIG
+		fi
+	done
 }
 
 setup_dotfiles() {
 	# Setup dotfiles
-	git clone --bare "$git@github.com:$GITHUB_USERNAME/dotfiles.git" "$HOME/dev/dotfiles"
+	git clone --bare "git@github.com:$GITHUB_USERNAME/dotfiles.git" "$HOME/dev/dotfiles"
 
 	if [[ $? -eq 1 ]]; then
 		echoerr "Failed to clone dotfiles repository!\n"
@@ -83,12 +93,40 @@ setup_zsh() {
 }
 export -f setup_zsh
 
-main() {
-	change_hostname
+setup_vim() {
+	# Vundle, vim's plugin manager
+	su $USER -c "git clone $GITHUB/VundleVim/Vundle.vim.git ~/.vim/bundle/Vundle.vim"
 
-	# Improve dnf speed
-	echo "fastestmirror=1" >> $DNF_CONFIG
-	echo "deltarpm=1" >> $DNF_CONFIG
+	# Compile YouComleteMe core with semantic support for C-family languages through libclang
+	cd ~/.vim/bundle/YouCompleteMe
+	python3 install.py --clang-completer
+}
+export -f setup_vim
+
+setup_neovim() {
+	curl -fLo ~/.local/share/nvim/site/autoload/plug.vim --create-dirs \
+				https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+	pip3 install --user pynvim
+
+}
+export -f setup_neovim
+
+setup_monitors() {
+	cat >> "/etc/sddm/Xsetup" <<- EOM
+# Dual monitor setup
+xrandr --output DVI-D-0 --mode 1920x1080  --output HDMI-0 --mode 1920x1080 --primary --left-of DVI-D-0
+	EOM
+}
+
+main() {
+	if [ $EUI -ne 0 ]; then
+		echo "You must execute this script as root!"
+		exit 1
+	fi
+
+	setup_dnf
+
+	change_hostname
 
 	# Enable rpmfusion repositories
 	dnf install -y $RPM_FUSION_FREE $RPM_FUSION_NONFREE
@@ -105,10 +143,20 @@ main() {
 	setup_zsh
 
 	su $USER -c "bash -c setup_dotfiles"
+
+	if [ -f "/root/.p10k.zsh" ]; then
+		rm "/root/.p10k.zsh"
+	fi
 	ln -s /home/$USER/.p10k.zsh /root/
 
-	# Vundle, vim's plugin manager
-	su $USER -c "git clone $GITHUB/VundleVim/Vundle.vim.git ~/.vim/bundle/Vundle.vim"
+
+	if [ -f "/root/.zshrc" ]; then
+		rm "/root/.zshrc"
+	fi
+	ln -s /home/$USER/.zshrc /root/
+
+	su $USER -c "bash -c setup_vim"
+	su $USER -c "bash -c setup_neovim"
 }
 
 main
