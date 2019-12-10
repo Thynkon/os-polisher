@@ -53,7 +53,7 @@ change_hostname() {
 }
 
 setup_dnf() {
-	local declare -A dnf_options
+	local typeset -A dnf_options
 	dnf_options[fastestmirror]=1
 	dnf_options[deltarpm]=1
 
@@ -128,7 +128,7 @@ xrandr --output DVI-D-0 --mode 1920x1080  --output HDMI-0 --mode 1920x1080 --pri
 }
 
 main() {
-	if [ $EUI -ne 0 ]; then
+	if [ $EUID -ne 0 ]; then
 		echo "You must execute this script as root!"
 		exit 1
 	fi
