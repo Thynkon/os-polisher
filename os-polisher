@@ -39,7 +39,7 @@ install_packages() {
 install_mega() {
 	wget "$MEGA/linux/MEGAsync/Fedora_$FEDORA_VERSION/$CPU_ARCH/megasync-Fedora_$FEDORA_VERSION.$CPU_ARCH.rpm" -P /tmp
 	cd /tmp
-	dnf install "./megasync-Fedora_$FEDORA_VERSION.$CPU_ARCH.rpm"
+	dnf install -y "./megasync-Fedora_$FEDORA_VERSION.$CPU_ARCH.rpm"
 }
 
 change_hostname() {
@@ -146,7 +146,7 @@ main() {
 	install_packages $CODECS_FILE
 	install_packages $FONTS_FILE
 	install_mega
-	wget "$GITHUB/ryanoasis/nerd-fonts/blob/master/patched-fonts/FiraMono/Regular/complete/Fura%20Mono%20Regular%20Nerd%20Font%20Complete.otf" -P /home/$USER/Downloads
+	wget "$GITHUB/ryanoasis/nerd-fonts/raw/master/patched-fonts/FiraMono/Regular/complete/Fura%20Mono%20Regular%20Nerd%20Font%20Complete.otf" -P /home/$USER/Downloads
 
 	# Install oh-my-zsh, powerlevel10k and some zsh plugins
 	su $USER -c "bash -c setup_zsh"
@@ -167,6 +167,8 @@ main() {
 
 	su $USER -c "bash -c setup_vim"
 	su $USER -c "bash -c setup_neovim"
+
+	setup_monitors
 }
 
 main
