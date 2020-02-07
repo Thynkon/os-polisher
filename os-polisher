@@ -94,16 +94,6 @@ setup_zsh() {
 }
 export -f setup_zsh
 
-setup_vim() {
-	# Vundle, vim's plugin manager
-	su $USER -c "git clone $GITHUB/VundleVim/Vundle.vim.git ~/.vim/bundle/Vundle.vim"
-
-	# Compile YouComleteMe core with semantic support for C-family languages through libclang
-	cd ~/.vim/bundle/YouCompleteMe
-	python3 install.py --clang-completer
-}
-export -f setup_vim
-
 setup_neovim() {
 	curl -fLo ~/.local/share/nvim/site/autoload/plug.vim --create-dirs \
 				https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
@@ -156,7 +146,6 @@ main() {
 	fi
 	ln -s /home/$USER/.zshrc /root/
 
-	su $USER -c "bash -c setup_vim"
 	su $USER -c "bash -c setup_neovim"
 
 	setup_monitors
