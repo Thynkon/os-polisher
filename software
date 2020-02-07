@@ -1,6 +1,7 @@
 akmod-nvidia
 ark
 awesome
+cargo
 composer
 compton
 discord
@@ -25,6 +26,7 @@ p7zip-plugins
 pavucontrol
 polybar
 rofi
+rust
 steam
 telegram-desktop
 thunderbird
