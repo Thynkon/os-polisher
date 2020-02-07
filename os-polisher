@@ -17,8 +17,6 @@ readonly SOFTWARE_FILE="software"
 readonly CODECS_FILE="codecs"
 readonly FONTS_FILE="fonts"
 
-readonly MEGA="https://mega.nz"
-
 export readonly GITHUB="https://github.com"
 export readonly GITHUB_USERNAME="Thynkon"
 
@@ -34,12 +32,6 @@ install_packages() {
 	done < "$1"
 
 	dnf install $packages_list
-}
-
-install_mega() {
-	wget "$MEGA/linux/MEGAsync/Fedora_$FEDORA_VERSION/$CPU_ARCH/megasync-Fedora_$FEDORA_VERSION.$CPU_ARCH.rpm" -P /tmp
-	cd /tmp
-	dnf install -y "./megasync-Fedora_$FEDORA_VERSION.$CPU_ARCH.rpm"
 }
 
 change_hostname() {
@@ -145,7 +137,6 @@ main() {
 	install_packages $SOFTWARE_FILE
 	install_packages $CODECS_FILE
 	install_packages $FONTS_FILE
-	install_mega
 	wget "$GITHUB/ryanoasis/nerd-fonts/raw/master/patched-fonts/FiraMono/Regular/complete/Fura%20Mono%20Regular%20Nerd%20Font%20Complete.otf" -P /home/$USER/Downloads
 
 	# Install oh-my-zsh, powerlevel10k and some zsh plugins
