@@ -3,7 +3,6 @@
 readonly USER="thynkon"
 
 readonly HOSTNAME_FILE="/etc/hostname"
-readonly HOSTNAME="fedora"
 
 readonly FEDORA_VERSION=$(rpm -E %fedora)
 readonly CPU_ARCH=$(uname -p)
@@ -23,6 +22,7 @@ readonly FONTS_FILE="fonts"
 export readonly GITHUB="https://github.com"
 export readonly GITHUB_USERNAME="Thynkon"
 
+hostname="fedora"
 mode="desktop"
 
 echoerr() {
@@ -50,7 +50,7 @@ change_hostname() {
 }
 
 setup_dnf() {
-	local declare -A dnf_options
+	declare -A dnf_options
 	dnf_options[fastestmirror]=1
 	dnf_options[deltarpm]=1
 
@@ -129,6 +129,10 @@ main() {
 	fi
 
 	setup_dnf
+
+	if [ "$mode" = "laptop" ]; then
+		hostname+="-laptop"
+	fi
 
 	change_hostname
 
