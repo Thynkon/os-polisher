@@ -1,4 +1,3 @@
-akmod-nvidia
 ark
 awesome
 cargo
@@ -14,12 +13,12 @@ java-openjdk
 kvantum
 libreoffice
 lsof
-lutris
 neofetch
 neovim
 nextcloud
 nginx
 nmap
+nodejs
 ntfs-3g
 okular
 p7zip
@@ -28,10 +27,8 @@ pavucontrol
 polybar
 rofi
 rust
-steam
 telegram-desktop
 thunderbird
-tlp
 unzip
 valgrind
 vim

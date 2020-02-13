@@ -13,12 +13,17 @@ readonly RPM_FUSION="https://download1.rpmfusion.org"
 readonly RPM_FUSION_FREE="$RPM_FUSION/free/fedora/rpmfusion-free-release-$FEDORA_VERSION.noarch.rpm"
 readonly RPM_FUSION_NONFREE="$RPM_FUSION/nonfree/fedora/rpmfusion-nonfree-release-$FEDORA_VERSION.noarch.rpm"
 
-readonly SOFTWARE_FILE="software"
+readonly DESKTOP_SOFTWARE="software/desktop"
+readonly LAPTOP_SOFTWARE="software/laptop"
+readonly COMMON_SOFTWARE="software/common"
+
 readonly CODECS_FILE="codecs"
 readonly FONTS_FILE="fonts"
 
 export readonly GITHUB="https://github.com"
 export readonly GITHUB_USERNAME="Thynkon"
+
+mode="desktop"
 
 echoerr() {
 	echo "$@" 1>&2
@@ -45,7 +50,7 @@ change_hostname() {
 }
 
 setup_dnf() {
-	local typeset -A dnf_options
+	local declare -A dnf_options
 	dnf_options[fastestmirror]=1
 	dnf_options[deltarpm]=1
 
@@ -58,8 +63,16 @@ setup_dnf() {
 }
 
 setup_dotfiles() {
+	local git_repo=""
+
+	git_repo+="git@github.com:$GITHUB_USERNAME/dotfiles"
+	if [ "$mode" = "laptop" ]; then
+		git_repo+="-laptop"
+	fi
+	git_repo+=".git"
+
 	# Setup dotfiles
-	git clone --bare "git@github.com:$GITHUB_USERNAME/dotfiles.git" "$HOME/dev/dotfiles"
+	git clone --bare "$git_repo" "$HOME/dev/dotfiles"
 
 	if [[ $? -eq 1 ]]; then
 		echoerr "Failed to clone dotfiles repository!\n"
@@ -124,10 +137,18 @@ main() {
 	dnf update
 
 	# Install software, codecs and fonts
-	install_packages $SOFTWARE_FILE
+	install_packages $COMMON_SOFTWARE
+	
+	if [ "$mode" = "dekstop" ]; then
+		install_packages $DESKTOP_SOFTWARE
+	else
+		install_packages $LAPTOP_SOFTWARE
+	fi
+
 	install_packages $CODECS_FILE
 	install_packages $FONTS_FILE
-	wget "$GITHUB/ryanoasis/nerd-fonts/raw/master/patched-fonts/FiraMono/Regular/complete/Fura%20Mono%20Regular%20Nerd%20Font%20Complete.otf" -P /home/$USER/Downloads
+#	wget "$GITHUB/ryanoasis/nerd-fonts/raw/master/patched-fonts/FiraMono/Regular/complete/Fura%20Mono%20Regular%20Nerd%20Font%20Complete.otf" -P /home/$USER/Downloads
+#wget https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/FiraMono/Regular/complete/Fura%20Mono%20Regular%20Nerd%20Font%20Complete.otf
 
 	# Install oh-my-zsh, powerlevel10k and some zsh plugins
 	su $USER -c "bash -c setup_zsh"
@@ -148,7 +169,9 @@ main() {
 
 	su $USER -c "bash -c setup_neovim"
 
-	setup_monitors
+	if [ "$mode" = "desktop" ]; then
+		setup_monitors
+	fi
 }
 
 main
