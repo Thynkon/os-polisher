@@ -138,7 +138,7 @@ main() {
 
 	# Enable rpmfusion repositories
 	dnf install -y $RPM_FUSION_FREE $RPM_FUSION_NONFREE
-	dnf update
+	dnf update -y
 
 	# Install software, codecs and fonts
 	install_packages $COMMON_SOFTWARE
@@ -151,6 +151,13 @@ main() {
 
 	install_packages $CODECS_FILE
 	install_packages $FONTS_FILE
+
+	# VSCode
+	rpm --import https://packages.microsoft.com/keys/microsoft.asc
+	echo -e "[code]\nname=Visual Studio Code\nbaseurl=https://packages.microsoft.com/yumrepos/vscode\nenabled=1\ngpgcheck=1\ngpgkey=https://packages.microsoft.com/keys/microsoft.asc" > /etc/yum.repos.d/vscode.repo
+	dnf check-update
+	dnf install code
+
 #	wget "$GITHUB/ryanoasis/nerd-fonts/raw/master/patched-fonts/FiraMono/Regular/complete/Fura%20Mono%20Regular%20Nerd%20Font%20Complete.otf" -P /home/$USER/Downloads
 #wget https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/FiraMono/Regular/complete/Fura%20Mono%20Regular%20Nerd%20Font%20Complete.otf
 
