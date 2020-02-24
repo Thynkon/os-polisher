@@ -13,6 +13,8 @@ java-openjdk
 kvantum
 libreoffice
 lsof
+lua-devel
+luarocks
 neofetch
 neovim
 nextcloud
