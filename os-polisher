@@ -33,6 +33,13 @@ echoerr() {
 	echo "$@" 1>&2
 }
 
+get_latest_release() {
+	local latest_release=""
+	latest_release=$(curl --silent "$GITHUB_API/repos/$1/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+
+	return latest_release
+}
+
 install_packages() {
 	packages_list=""
 
@@ -118,6 +125,19 @@ setup_neovim() {
 
 }
 export -f setup_neovim
+
+setup_gitahead() {
+	local repository="gitahead/gitahead"
+	local latest_release=""
+	local gitahead_directory="$HOME/dev/GitAhead"
+
+	latest_release=$(get_latest_release "$repository")
+
+	mkdir -p "$HOME/dev/GitAhead"
+	wget "$GITHUB_HTTPS/$repository/releases/download/$latest_release/GitAhead-2.6.1.sh" -O "$gitahead_directory/GitAhead.sh"
+	chmod +x "$gitahead_directory/GitAhead.sh"
+	"$gitahead_directory/GitAhead.sh"
+}
 
 setup_monitors() {
 	cat >> "/etc/sddm/Xsetup" <<- EOM
