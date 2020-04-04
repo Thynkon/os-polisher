@@ -139,12 +139,44 @@ setup_gitahead() {
 	"$gitahead_directory/GitAhead.sh"
 }
 
+setup_vscode() {
+	rpm --import https://packages.microsoft.com/keys/microsoft.asc
+
+	cat >> /etc/yum.repos.d/vscode.repo  <<- EOM
+	[code]name=Visual Studio Codebaseurl=https://packages.microsoft.com/yumrepos/vscode
+	enabled=1
+	gpgcheck=1
+	gpgkey=https://packages.microsoft.com/keys/microsoft.asc
+	EOM
+
+	dnf check-update
+	dnf install -y code
+}
+
 setup_monitors() {
 	cat >> "/etc/sddm/Xsetup" <<- EOM
-# Dual monitor setup
-xrandr --output DVI-D-0 --mode 1920x1080  --output HDMI-0 --mode 1920x1080 --primary --left-of DVI-D-0
+	# Dual monitor setup
+	xrandr --output DVI-D-0 --mode 1920x1080  --output HDMI-0 --mode 1920x1080 --primary --left-of DVI-D-0
 	EOM
 }
+
+install_fonts() {
+	local POWERLEVEL10k_MEDIA_REPO="romkatv/powerlevel10k-media"
+	local NERD_FONTS_REPO="ryanoasis/nerd-fonts"
+
+	# MesloLGS
+	kfontinst "$GITHUB_HTTPS/$POWERLEVEL10k_MEDIA_REPO/raw/master/MesloLGS%20NF%20Regular.ttf"
+	kfontinst "$GITHUB_HTTPS/$POWERLEVEL10k_MEDIA_REPO/raw/master/MesloLGS%20NF%20Bold.ttf"
+	kfontinst "$GITHUB_HTTPS/$POWERLEVEL10k_MEDIA_REPO/raw/master/MesloLGS%20NF%20Italic.ttf"
+	kfontinst "$GITHUB_HTTPS/$POWERLEVEL10k_MEDIA_REPO/raw/master/MesloLGS%20NF%20Bold%20Italic.ttf"
+
+	# Roboto Mono
+	kfontinst "$GITHUB_HTTPS/$NERD_FONTS_REPO/raw/master/patched-fonts/RobotoMono/Regular/complete/Roboto%20Mono%20Nerd%20Font%20Complete.ttf"
+
+	# Hurmit
+	kfontinst "$GITHUB_HTTPS/$NERD_FONTS_REPO/raw/master/patched-fonts/Hermit/Medium/complete/Hurmit%20Medium%20Nerd%20Font%20Complete.otf"
+}
+export -f install_fonts
 
 main() {
 	if [ $EUID -ne 0 ]; then
@@ -175,18 +207,13 @@ main() {
 
 	install_packages $CODECS_FILE
 	install_packages $FONTS_FILE
+	su $USER -c "bash -c install_fonts"
 
 	# Gitahead
 	setup_gitahead
 
 	# VSCode
-	rpm --import https://packages.microsoft.com/keys/microsoft.asc
-	echo -e "[code]\nname=Visual Studio Code\nbaseurl=https://packages.microsoft.com/yumrepos/vscode\nenabled=1\ngpgcheck=1\ngpgkey=https://packages.microsoft.com/keys/microsoft.asc" > /etc/yum.repos.d/vscode.repo
-	dnf check-update
-	dnf install code
-
-#	wget "$GITHUB_HTTPS/ryanoasis/nerd-fonts/raw/master/patched-fonts/FiraMono/Regular/complete/Fura%20Mono%20Regular%20Nerd%20Font%20Complete.otf" -P /home/$USER/Downloads
-#wget https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/FiraMono/Regular/complete/Fura%20Mono%20Regular%20Nerd%20Font%20Complete.otf
+	setup_vscode
 
 	# Install oh-my-zsh, powerlevel10k and some zsh plugins
 	su $USER -c "bash -c setup_zsh"
