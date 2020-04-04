@@ -11,7 +11,6 @@ readonly DNF_CONFIG="/etc/dnf/dnf.conf"
 readonly RPM_FUSION="https://download1.rpmfusion.org"
 readonly RPM_FUSION_FREE="$RPM_FUSION/free/fedora/rpmfusion-free-release-$FEDORA_VERSION.noarch.rpm"
 readonly RPM_FUSION_NONFREE="$RPM_FUSION/nonfree/fedora/rpmfusion-nonfree-release-$FEDORA_VERSION.noarch.rpm"
-
 readonly DESKTOP_SOFTWARE="software/desktop"
 readonly LAPTOP_SOFTWARE="software/laptop"
 readonly COMMON_SOFTWARE="software/common"
@@ -98,10 +97,11 @@ setup_dotfiles() {
 export -f setup_dotfiles
 
 setup_zsh() {
-	local ZSH_CUSTOM="$HOME/.oh-my-zsh/custom"
+	local OH_MY_ZSH_DIR="$HOME/.config/oh-my-zsh"
+	local ZSH_CUSTOM="$OH_MY_ZSH_DIR/custom"
 
 	# Oh-my-zsh
-	sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+	ZSH="$OH_MY_ZSH_DIR" sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
 
 	# powerlevel
 	git clone $GITHUB_HTTPS/romkatv/powerlevel10k.git $ZSH_CUSTOM/themes/powerlevel10k
@@ -176,6 +176,9 @@ main() {
 	install_packages $CODECS_FILE
 	install_packages $FONTS_FILE
 
+	# Gitahead
+	setup_gitahead
+
 	# VSCode
 	rpm --import https://packages.microsoft.com/keys/microsoft.asc
 	echo -e "[code]\nname=Visual Studio Code\nbaseurl=https://packages.microsoft.com/yumrepos/vscode\nenabled=1\ngpgcheck=1\ngpgkey=https://packages.microsoft.com/keys/microsoft.asc" > /etc/yum.repos.d/vscode.repo
@@ -194,7 +197,7 @@ main() {
 	if [ -f "/root/.p10k.zsh" ]; then
 		rm "/root/.p10k.zsh"
 	fi
-	ln -s /home/$USER/.p10k.zsh /root/
+	ln -s /home/$USER/.config/p10k.zsh /root/
 
 
 	if [ -f "/root/.zshrc" ]; then
