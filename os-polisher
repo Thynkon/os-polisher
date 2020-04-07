@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-readonly USER="thynkon"
-
 readonly HOSTNAME_FILE="/etc/hostname"
 
 readonly FEDORA_VERSION=$(rpm -E %fedora)
@@ -25,8 +23,10 @@ export readonly GITHUB_API="https://api.$GITHUB_DOMAIN"
 export readonly GITHUB_HTTPS="https://$GITHUB_DOMAIN"
 export readonly GITHUB_SSH="git@$GITHUB_DOMAIN"
 
+user="thynkon"
 hostname="fedora"
 mode="desktop"
+confirm=n
 
 echoerr() {
 	echo "$@" 1>&2
@@ -181,18 +181,57 @@ install_fonts() {
 }
 export -f install_fonts
 
+get_installation_info() {
+	echo "Setup info:"
+	echo "Username: ${user}"
+	echo "Hostname: ${hostname}"
+	echo "Mode:	${mode}"
+}
+
+usage() {
+	echo "usage message"
+}
+
 main() {
 	if [ $EUID -ne 0 ]; then
 		echo "You must execute this script as root!"
 		exit 1
 	fi
 
-	setup_dnf
+	while getopts "h:m:u:" option; do
+		case "${option}" in
+			h)
+				hostname=$OPTARG
+				;;
+
+			m)
+				mode=$OPTARG
+				;;
+
+			u)
+				user=$OPTARG
+				;;
+
+			*)
+				usage
+				;;
+
+		esac
+	done
 
 	if [ "$mode" = "laptop" ]; then
 		hostname+="-laptop"
 	fi
 
+	get_installation_info
+
+	read -p  "Continue? y/n:"  confirm
+	if [[ "$confirm" != "y" ]]; then
+		echo "Exiting..."
+		exit 0
+	fi
+
+	setup_dnf
 	change_hostname
 
 	# Enable rpmfusion repositories
@@ -210,7 +249,7 @@ main() {
 
 	install_packages $CODECS_FILE
 	install_packages $FONTS_FILE
-	su $USER -c "bash -c install_fonts"
+	su $user -c "bash -c install_fonts"
 
 	# Gitahead
 	setup_gitahead
@@ -219,29 +258,29 @@ main() {
 	setup_vscode
 
 	# Install oh-my-zsh, powerlevel10k and some zsh plugins
-	su $USER -c "bash -c setup_zsh"
+	su $user -c "bash -c setup_zsh"
 	setup_zsh
 
-	su $USER -c "bash -c setup_dotfiles"
+	su $user -c "bash -c setup_dotfiles"
 
 	if [ -f "/root/.p10k.zsh" ]; then
 		rm "/root/.p10k.zsh"
 	fi
-	ln -s /home/$USER/.config/p10k.zsh /root/
+	ln -s /home/$user/.config/p10k.zsh /root/
 
 
 	if [ -f "/root/.zshrc" ]; then
 		rm "/root/.zshrc"
 	fi
-	ln -s /home/$USER/.zshrc /root/
+	ln -s /home/$user/.zshrc /root/
 
-	su $USER -c "bash -c setup_neovim"
+	su $user -c "bash -c setup_neovim"
 
 	if [ "$mode" = "desktop" ]; then
 		setup_monitors
 	fi
 }
 
-main
+main $@
 
 exit 0
