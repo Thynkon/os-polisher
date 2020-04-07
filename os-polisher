@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+readonly PROGRAM_NAME=$(basename $0)
+
 readonly HOSTNAME_FILE="/etc/hostname"
 
 readonly FEDORA_VERSION=$(rpm -E %fedora)
@@ -189,7 +191,10 @@ get_installation_info() {
 }
 
 usage() {
-	echo "usage message"
+	echo -e "${PROGRAM_NAME} usage:\n"
+	echo -e "-h\t hostname"
+	echo -e "-m\t mode"
+	echo -e "-u\t username\n"
 }
 
 main() {
@@ -214,6 +219,7 @@ main() {
 
 			*)
 				usage
+				exit 1
 				;;
 
 		esac
