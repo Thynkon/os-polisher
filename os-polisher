@@ -115,6 +115,8 @@ setup_zsh() {
 
 	# zsh-syntax-highlighting
 	git clone $GITHUB_HTTPS/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
+
+	chsh -s $(which zsh)
 }
 export -f setup_zsh
 
@@ -143,7 +145,8 @@ setup_vscode() {
 	rpm --import https://packages.microsoft.com/keys/microsoft.asc
 
 	cat >> /etc/yum.repos.d/vscode.repo  <<- EOM
-	[code]name=Visual Studio Codebaseurl=https://packages.microsoft.com/yumrepos/vscode
+	[code]name=Visual Studio Code
+	baseurl=https://packages.microsoft.com/yumrepos/vscode
 	enabled=1
 	gpgcheck=1
 	gpgkey=https://packages.microsoft.com/keys/microsoft.asc
