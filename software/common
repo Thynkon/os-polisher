@@ -1,6 +1,5 @@
 ark
 awesome
-cargo
 clang-tools-extra
 composer
 compton
@@ -29,9 +28,9 @@ p7zip
 p7zip-plugins
 pavucontrol
 polybar
+redshift
 rofi
 rpmdevtools
-rust
 telegram-desktop
 thunderbird
 udiskie
