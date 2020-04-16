@@ -1,204 +1,28 @@
 #!/usr/bin/env bash
 
-readonly PROGRAM_NAME=$(basename $0)
+CURRENT_DIR=$(pwd)
+PATH="${CURRENT_DIR}:${PATH}"
+PATH="${CURRENT_DIR}/lib:${PATH}"
+PATH="${CURRENT_DIR}/scripts:${PATH}"
+export PATH
 
-readonly HOSTNAME_FILE="/etc/hostname"
-
-readonly FEDORA_VERSION=$(rpm -E %fedora)
-readonly CPU_ARCH=$(uname -p)
-
-readonly DNF_CONFIG="/etc/dnf/dnf.conf"
-readonly RPM_FUSION="https://download1.rpmfusion.org"
-readonly RPM_FUSION_FREE="$RPM_FUSION/free/fedora/rpmfusion-free-release-$FEDORA_VERSION.noarch.rpm"
-readonly RPM_FUSION_NONFREE="$RPM_FUSION/nonfree/fedora/rpmfusion-nonfree-release-$FEDORA_VERSION.noarch.rpm"
-readonly DESKTOP_SOFTWARE="software/desktop"
-readonly LAPTOP_SOFTWARE="software/laptop"
-readonly COMMON_SOFTWARE="software/common"
-
-readonly CODECS_FILE="codecs"
-readonly FONTS_FILE="fonts"
-
-# Github
-export readonly GITHUB_USERNAME="Thynkon"
-export readonly GITHUB_DOMAIN="github.com"
-export readonly GITHUB_API="https://api.$GITHUB_DOMAIN"
-export readonly GITHUB_HTTPS="https://$GITHUB_DOMAIN"
-export readonly GITHUB_SSH="git@$GITHUB_DOMAIN"
+source "config.sh"
+source "lib.sh"
+source "vscode.sh"
 
 user="thynkon"
 hostname="fedora"
 mode="desktop"
+
 confirm=n
 
-echoerr() {
-	echo "$@" 1>&2
-}
+declare -A installation_info
+installation_info[user]="${user}"
+installation_info[hostname]="${hostname}"
+installation_info[mode]="${mode}"
 
-get_latest_release() {
-	local latest_release=""
-	latest_release=$(curl --silent "$GITHUB_API/repos/$1/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
-
-	return latest_release
-}
-
-install_packages() {
-	packages_list=""
-
-	while IFS= read -r line; do
-		packages_list+=$line"  "
-	done < "$1"
-
-	dnf install $packages_list
-}
-
-change_hostname() {
-	# Change hostname
-	if [[ -z $HOSTNAME ]];then
-		echoerr "Hostname is null\n"
-	fi
-
-	echo $HOSTNAME > $HOSTNAME_FILE
-	hostname $HOSTNAME
-}
-
-setup_dnf() {
-	declare -A dnf_options
-	dnf_options[fastestmirror]=1
-	dnf_options[deltarpm]=1
-
-	for option in "${!dnf_options[@]}"; do
-		# Only enable these settings if they aren't already set
-		if ! grep -q "$option=${dnf_options[$option]}" $DNF_CONFIG; then
-			echo "$option=${dnf_options[$option]}" >> $DNF_CONFIG
-		fi
-	done
-}
-
-setup_dotfiles() {
-	local git_repo=""
-
-	git_repo+="$GITHUB_SSH:$GITHUB_USERNAME/dotfiles"
-	if [ "$mode" = "laptop" ]; then
-		git_repo+="-laptop"
-	fi
-	git_repo+=".git"
-
-	# Setup dotfiles
-	git clone --bare "$git_repo" "$HOME/dev/dotfiles"
-
-	if [[ $? -eq 1 ]]; then
-		echoerr "Failed to clone dotfiles repository!\n"
-		echoerr "Check your ssh keys!\n"
-
-		exit 1
-	fi
-
-	git --git-dir=$HOME/dev/dotfiles/ --work-tree=$HOME checkout -f
-	git --git-dir=$HOME/dev/dotfiles/ --work-tree=$HOME config --local status.showUntrackedFiles no
-}
-export -f setup_dotfiles
-
-setup_zsh() {
-	local OH_MY_ZSH_DIR="$HOME/.config/oh-my-zsh"
-	local ZSH_CUSTOM="$OH_MY_ZSH_DIR/custom"
-
-	# Oh-my-zsh
-	ZSH="$OH_MY_ZSH_DIR" sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
-
-	# powerlevel
-	git clone $GITHUB_HTTPS/romkatv/powerlevel10k.git $ZSH_CUSTOM/themes/powerlevel10k
-
-	### Plugins
-	# alias-tips
-	git clone $GITHUB_HTTPS/djui/alias-tips.git $ZSH_CUSTOM/plugins/alias-tips
-
-	# zsh-completions
-	git clone $GITHUB_HTTPS/zsh-users/zsh-completions $ZSH_CUSTOM/plugins/zsh-completions
-
-	# zsh-syntax-highlighting
-	git clone $GITHUB_HTTPS/zsh-users/zsh-syntax-highlighting.git $ZSH_CUSTOM/plugins/zsh-syntax-highlighting
-
-	# zsh-autosuggestions (fish like)
-	git clone $GITHUB_HTTPS/zsh-users/zsh-autosuggestions $ZSH_CUSTOM/plugins/zsh-autosuggestions
-
-	chsh -s $(which zsh)
-}
-export -f setup_zsh
-
-setup_neovim() {
-	curl -fLo ~/.local/share/nvim/site/autoload/plug.vim --create-dirs \
-				https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
-	pip3 install --user pynvim
-
-}
-export -f setup_neovim
-
-setup_gitahead() {
-	local repository="gitahead/gitahead"
-	local latest_release=""
-	local gitahead_directory="$HOME/dev/GitAhead"
-
-	latest_release=$(get_latest_release "$repository")
-
-	mkdir -p "$HOME/dev/GitAhead"
-	wget "$GITHUB_HTTPS/$repository/releases/download/$latest_release/GitAhead-2.6.1.sh" -O "$gitahead_directory/GitAhead.sh"
-	chmod +x "$gitahead_directory/GitAhead.sh"
-	"$gitahead_directory/GitAhead.sh"
-}
-
-setup_vscode() {
-	rpm --import https://packages.microsoft.com/keys/microsoft.asc
-
-	cat >> /etc/yum.repos.d/vscode.repo  <<- EOM
-	[code]name=Visual Studio Code
-	baseurl=https://packages.microsoft.com/yumrepos/vscode
-	enabled=1
-	gpgcheck=1
-	gpgkey=https://packages.microsoft.com/keys/microsoft.asc
-	EOM
-
-	dnf check-update
-	dnf install -y code
-}
-
-setup_monitors() {
-	cat >> "/etc/sddm/Xsetup" <<- EOM
-	# Dual monitor setup
-	xrandr --output DVI-D-0 --mode 1920x1080  --output HDMI-0 --mode 1920x1080 --primary --left-of DVI-D-0
-	EOM
-}
-
-install_fonts() {
-	local POWERLEVEL10k_MEDIA_REPO="romkatv/powerlevel10k-media"
-	local NERD_FONTS_REPO="ryanoasis/nerd-fonts"
-
-	# MesloLGS
-	kfontinst "$GITHUB_HTTPS/$POWERLEVEL10k_MEDIA_REPO/raw/master/MesloLGS%20NF%20Regular.ttf"
-	kfontinst "$GITHUB_HTTPS/$POWERLEVEL10k_MEDIA_REPO/raw/master/MesloLGS%20NF%20Bold.ttf"
-	kfontinst "$GITHUB_HTTPS/$POWERLEVEL10k_MEDIA_REPO/raw/master/MesloLGS%20NF%20Italic.ttf"
-	kfontinst "$GITHUB_HTTPS/$POWERLEVEL10k_MEDIA_REPO/raw/master/MesloLGS%20NF%20Bold%20Italic.ttf"
-
-	# Roboto Mono
-	kfontinst "$GITHUB_HTTPS/$NERD_FONTS_REPO/raw/master/patched-fonts/RobotoMono/Regular/complete/Roboto%20Mono%20Nerd%20Font%20Complete.ttf"
-
-	# Hurmit
-	kfontinst "$GITHUB_HTTPS/$NERD_FONTS_REPO/raw/master/patched-fonts/Hermit/Medium/complete/Hurmit%20Medium%20Nerd%20Font%20Complete.otf"
-}
-export -f install_fonts
-
-get_installation_info() {
-	echo "Setup info:"
-	echo "Username: ${user}"
-	echo "Hostname: ${hostname}"
-	echo "Mode:	${mode}"
-}
-
-usage() {
-	echo -e "${PROGRAM_NAME} usage:\n"
-	echo -e "-h\t hostname"
-	echo -e "-m\t mode"
-	echo -e "-u\t username\n"
-}
+# Exits on error
+set -e
 
 main() {
 	if [ $EUID -ne 0 ]; then
@@ -240,15 +64,11 @@ main() {
 		exit 0
 	fi
 
-	setup_dnf
+	dnf.sh
 	change_hostname
 
-	# Enable rpmfusion repositories
-	dnf install -y $RPM_FUSION_FREE $RPM_FUSION_NONFREE
-	dnf update -y
-
 	# Install software, codecs and fonts
-	install_packages $COMMON_SOFTWARE
+	install_packages "${COMMON_SOFTWARE}"
 	
 	if [ "$mode" = "dekstop" ]; then
 		install_packages $DESKTOP_SOFTWARE
@@ -258,22 +78,23 @@ main() {
 
 	install_packages $CODECS_FILE
 	install_packages $FONTS_FILE
-	su $user -c "bash -c install_fonts"
+	su "${user}" -c "fonts.sh"
 
 	# Gitahead
-	setup_gitahead
+	su "${user}" -c "gitahead.sh"
 
 	# VSCode
-	setup_vscode
+	install_vscode
+	su "${user}" -c "source vscode.sh; install_vscode_extensions"
 
 	# Install oh-my-zsh, powerlevel10k and some zsh plugins
-	su $user -c "bash -c setup_zsh"
-	setup_zsh
+	su $user -c "zsh.sh"
+	"zsh.sh"
 
 	# Install rust
-	su $user -c "curl https://sh.rustup.rs -sSf | sh -s -- -y --no-modify-path"
+	su $user -c "rust.sh"
 
-	su $user -c "bash -c setup_dotfiles"
+	su "${user}" -c "dotfiles.sh"
 
 	if [ -f "/root/.p10k.zsh" ]; then
 		rm "/root/.p10k.zsh"
@@ -286,10 +107,10 @@ main() {
 	fi
 	ln -s /home/$user/.zshrc /root/
 
-	su $user -c "bash -c setup_neovim"
+	su "${user}" -c "neovim.sh"
 
 	if [ "$mode" = "desktop" ]; then
-		setup_monitors
+		"monitors.sh"
 	fi
 }
 
