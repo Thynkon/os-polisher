@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-source "../config.sh"
-source "../lib/lib.sh"
+source "config.sh"
+source "lib.sh"
 
 repository="twpayne/chezmoi"
 
