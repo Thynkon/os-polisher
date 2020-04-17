@@ -115,9 +115,7 @@ main() {
 
 	su "${user}" -c "neovim.sh"
 
-	if [ "$mode" = "desktop" ]; then
-		"monitors.sh"
-	fi
+	"monitors.sh" "${mode}"
 }
 
 main $@
