@@ -67,6 +67,10 @@ main() {
 	dnf.sh
 	change_hostname
 
+	# Remove kde bloatware
+	# This might remove mariadb-server
+	"kde.sh" "${user}"
+
 	# Install software, codecs and fonts
 	install_packages "${COMMON_SOFTWARE}"
 	
@@ -94,6 +98,8 @@ main() {
 	# Install rust
 	su $user -c "rust.sh"
 
+	# Setup dotfiles
+	"chezmoi.sh"
 	su "${user}" -c "dotfiles.sh"
 
 	if [ -f "/root/.p10k.zsh" ]; then
