@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 
-files=( codecs fonts software/common software/laptop software/desktop )
-
-for f in "${files[@]}"; do
-	sort -o $f $f
+PACKAGES_DIR="./packages"
+for file in `find "${PACKAGES_DIR}" -type f`; do
+	sort -o ${file} ${file}
 done
