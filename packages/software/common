@@ -14,6 +14,7 @@ htop
 java-openjdk
 kvantum
 libreoffice
+lsd
 lsof
 lua-devel
 luarocks
@@ -40,4 +41,5 @@ valgrind
 vim
 VirtualBox
 @virtualization
+yarnpkg
 zsh
