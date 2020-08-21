@@ -8,7 +8,7 @@ export PATH
 
 source "config.sh"
 source "lib.sh"
-source "vscode.sh"
+source "vscodium.sh"
 
 user="thynkon"
 hostname="fedora"
@@ -88,8 +88,8 @@ main() {
 	su "${user}" -c "gitahead.sh"
 
 	# VSCode
-	install_vscode
-	su "${user}" -c "source vscode.sh; install_vscode_extensions"
+	install_vscodium
+	su "${user}" -c "source vscodium.sh; install_vscodium_extensions"
 
 	# Install oh-my-zsh, powerlevel10k and some zsh plugins
 	su $user -c "zsh.sh"

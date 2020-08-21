@@ -1,23 +1,25 @@
 #!/usr/bin/env bash
 
-install_vscode() {
+install_vscodium() {
 	# Import gpg key
 	rpm --import https://packages.microsoft.com/keys/microsoft.asc
 
-	cat >> /etc/yum.repos.d/vscode.repo  <<- EOM
-	[code]
-	name=Visual Studio Code
-	baseurl=https://packages.microsoft.com/yumrepos/vscode
+	cat >> /etc/yum.repos.d/vscodium.repo  <<- EOM
+	[gitlab.com_paulcarroty_vscodium_repo]
+	name=gitlab.com_paulcarroty_vscodium_repo
+	baseurl=https://paulcarroty.gitlab.io/vscodium-deb-rpm-repo/rpms/
 	enabled=1
 	gpgcheck=1
-	gpgkey=https://packages.microsoft.com/keys/microsoft.asc
+	repo_gpgcheck=1
+	gpgkey=https://gitlab.com/paulcarroty/vscodium-deb-rpm-repo/raw/master/pub.gpg
 	EOM
 
+
 	dnf check-update
-	dnf install -y code
+	dnf install -y codium
 }
 
-install_vscode_extensions() {
+install_vscodium_extensions() {
 	extensions=(
 		amiralizadeh9480.laravel-extra-intellisense
 		bmewburn.vscode-intelephense-client
@@ -35,6 +37,6 @@ install_vscode_extensions() {
 	)
 
 	for extension in "${extensions[@]}"; do
-		code --install-extension "${extension}"
+		codium --install-extension "${extension}"
 	done
 }
