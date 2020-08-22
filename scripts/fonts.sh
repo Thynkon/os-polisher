@@ -17,5 +17,6 @@ kfontinst "${GITHUB_HTTPS}/${NERD_FONTS_REPO}/raw/master/patched-fonts/RobotoMon
 
 # Hurmit
 kfontinst "${GITHUB_HTTPS}/${NERD_FONTS_REPO}/raw/master/patched-fonts/Hermit/Medium/complete/Hurmit%20Medium%20Nerd%20Font%20Complete.otf"
+kfontinst "${GITHUB_HTTPS}/${NERD_FONTS_REPO}/raw/master/patched-fonts/Hermit/Medium/complete/Hurmit%20Medium%20Nerd%20Font%20Complete%20Mono.otf"
 
 exit 0
